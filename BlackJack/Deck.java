@@ -1,41 +1,30 @@
+package BlackJack;
+
+import java.util.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public Class Deck {
-    private List<Card> cards;
-    private final List<Card> fullDeck;
+public class Deck {
+    private final List<Card> cards = new ArrayList<>();
 
-    public Deck () {
-    cards = new ArrayList<>();
-    fullDeck = new ArrayList<>();
-    
-}
-
-shuffle();
-};
-
+    public Deck() {
+        for (Suit s : Suit.values())
+            for (Rank r : Rank.values())
+                cards.add(new Card(s, r));
+    }
 
     public void shuffle() {
         Collections.shuffle(cards);
-    
-    }
-    public Card dealCard() {
-        if (card.size() < 10) {
-            system.out.println("Deck is low on cards. Resetting and Shuffling...");
-            resetandShuffle();
-            
-        }    
-        return cards.remove(0);
-       
     }
 
-public void resetandShuffle(){
-    cards = new ArrayList<>(fullDeck);
-    shuffle();
+    public Card drawCard() {
+        if (isEmpty()) throw new IllegalStateException("Deck is empty");
+        return cards.remove(cards.size() - 1);
+    }
+
+    public boolean isEmpty() {
+        return cards.isEmpty();
+    }
 }
-
-    public int cardsRemaining() {
-        return card.size();
-    }
