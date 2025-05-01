@@ -1,41 +1,45 @@
+package BlackJack;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-public Class Deck {
-    private List<Card> cards;
-    private final List<Card> fullDeck;
+public class Deck {
+	private List<Card> cards;
+    private static final int SHUFFLE_THRESHOLD = 26; // half of 52
 
-    public Deck () {
-    cards = new ArrayList<>();
-    fullDeck = new ArrayList<>();
-    
-}
+    public Deck() {
+        cards = new ArrayList<>();
+        initializeDeck();
+        shuffle();
+    }
 
-shuffle();
-};
-
+    private void initializeDeck() {
+        for (Suit suit : Suit.values()) {
+            for (Rank rank : Rank.values()) {
+                cards.add(new Card(suit, rank));
+            }
+        }
+    }
 
     public void shuffle() {
         Collections.shuffle(cards);
-    
-    }
-    public Card dealCard() {
-        if (card.size() < 10) {
-            system.out.println("Deck is low on cards. Resetting and Shuffling...");
-            resetandShuffle();
-            
-        }    
-        return cards.remove(0);
-       
+        System.out.println("\n-- Deck shuffled --");
     }
 
-public void resetandShuffle(){
-    cards = new ArrayList<>(fullDeck);
-    shuffle();
+    public Card drawCard() {
+        if (cards.size() <= SHUFFLE_THRESHOLD) {
+            System.out.println("\n-- Low cards, reshuffling deck --");
+            cards.clear();
+            initializeDeck();
+            shuffle();
+        }
+
+        if (!cards.isEmpty()) {
+            return cards.remove(0);
+        }
+        return null; // Deck should never be empty because of auto reshuffle
+    }
+
+    public boolean isEmpty() {
+        return cards.isEmpty();
+    }
 }
-
-    public int cardsRemaining() {
-        return card.size();
-    }
