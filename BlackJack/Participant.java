@@ -1,11 +1,7 @@
 package BlackJack;
 
 public abstract class Participant {
-	protected Hand hand;
-
-    public Participant() {
-        hand = new Hand();
-    }
+    protected final Hand hand = new Hand();
 
     public abstract void takeTurn(Deck deck);
 
@@ -13,7 +9,7 @@ public abstract class Participant {
         return hand;
     }
 
-    public void clearHand() {
+    public void resetHand() {
         hand.clear();
     }
 }

@@ -1,31 +1,24 @@
 package BlackJack;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Hand {
-	private List<Card> cards;
-
-    public Hand() {
-        cards = new ArrayList<>();
-    }
+    private final List<Card> cards = new ArrayList<>();
 
     public void addCard(Card card) {
         cards.add(card);
     }
 
     public int getTotal() {
-        int total = 0;
-        int aces = 0;
-        for (Card card : cards) {
-            total += card.getValue();
-            if (card.getRank() == Rank.ACE) {
-                aces++;
-            }
+        int total = 0, aces = 0;
+        for (Card c : cards) {
+            total += c.getValue();
+            if (c.getValue() == Rank.ACE.getValue()) aces++;
         }
-        // Handle Aces as 11 or 1
-        while (total > 21 && aces > 0) {
+        // downgrade Aces from 11 to 1
+        while (total > 21 && aces-- > 0) {
             total -= 10;
-            aces--;
         }
         return total;
     }
@@ -43,20 +36,6 @@ public class Hand {
     }
 
     public List<Card> getCards() {
-        return cards;
+        return new ArrayList<>(cards);
     }
-    
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for (Card card : cards) {
-            sb.append(card.toString()).append(", ");
-        }
-        if (sb.length() > 0) {
-            sb.setLength(sb.length() - 2); // Remove trailing comma and space
-        }
-        return sb.toString();
-    }
-    
 }
-

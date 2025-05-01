@@ -1,136 +1,86 @@
 package BlackJack;
-
+// File: GameEngine.java
 public class GameEngine {
-    private final Deck deck;
-    private final Player player;
-    private final Dealer dealer;
-    private final CLI cli;
+    private final Deck deck = new Deck();
+    private final Player player = new Player();
+    private final Dealer dealer = new Dealer();
+    private final CLI cli = new CLI();
 
-    public GameEngine(Deck deck, Player player, Dealer dealer, CLI cli) {
-        this.deck   = deck;
-        this.player = player;
-        this.dealer = dealer;
-        this.cli    = cli;
-    }
-
-    public GameEngine() {
-        this(new Deck(), new Player(), new Dealer(), new CLI());
+    public static void main(String[] args) {
+        new GameEngine().startGame();
     }
 
     public void startGame() {
         cli.printWelcome();
-        double startingBalance = player.getBalance();
-        boolean playing = true;
-        while (playing) {
-            playRound();
-            playing = player.getBalance() > 0 && cli.askToContinue();
-        }
-        showFarewell();
-        showProfitLoss(startingBalance, player.getBalance());
-    }
+        do {
+            deck.shuffle();
+            player.resetHand();
+            dealer.resetHand();
 
-    private void playRound() {
-        double bet = cli.promptBet(player);
-        if (!player.canAfford(bet)) {
-            cli.showResult("You can't afford that bet!");
-            return;
-        }
-        player.placeBet(bet);
-        player.clearHand();
-        dealer.clearHand();
-        initialDeal();
-        cli.showHands(player, dealer, true);
-        if (handleBlackjack()) {
-            return;
-        }
-        handlePlayerTurn();
-        if (!player.getHand().isBust()) {
-            handleDealerTurn();
-        }
-        cli.showHands(player, dealer, false);
-        determineWinner();
-        cli.printBalance(player);
-    }
+            double bet = cli.promptBet(player);
+            player.placeBet(bet);
 
-    private void initialDeal() {
-        player.drawCard(deck.drawCard());
-        dealer.drawCard(deck.drawCard());
-        player.drawCard(deck.drawCard());
-        dealer.drawCard(deck.drawCard());
-    }
+            // === CORRECT INITIAL DEAL ===
+            // Deal two cards each, alternating player and dealer
+            player.draw(deck.drawCard());
+            dealer.getHand().addCard(deck.drawCard());
 
-    private boolean handleBlackjack() {
-        if (player.getHand().getTotal() == 21) {
+            player.draw(deck.drawCard());
+            dealer.getHand().addCard(deck.drawCard());
+            // =============================
+
+            // show initial hands (dealer's second card hidden)
             cli.showHands(player, dealer, false);
-            int dealerTotal = dealer.getHand().getTotal();
-            if (dealerTotal == 21) {
-                cli.showResult("Both you and the dealer have Blackjack! It's a push.");
-                player.winBet();
-            } else {
-                cli.showResult("Blackjack! You win!");
-                player.winBlackjack();
-            }
-            cli.printBalance(player);
-            if (player.getBalance() <= 0) {
-                cli.showResult("You are out of money! Game over.");
-            }
-            return true;
-        }
-        return false;
-    }
 
-    private void handlePlayerTurn() {
-        boolean continueDrawing = true;
-        while (continueDrawing && !player.getHand().isBust()) {
-            String move = cli.promptMove();
-            if (move.equalsIgnoreCase("hit")) {
-                player.drawCard(deck.drawCard());
+            // Player's turn
+            while (!player.getHand().isBust()) {
+                String move = cli.promptMove();
+                if ("hit".equals(move)) {
+                    player.draw(deck.drawCard());
+                    cli.showHands(player, dealer, false);
+                } else if ("stand".equals(move)) {
+                    break;
+                } else {
+                    System.out.println("Invalid—type 'hit' or 'stand'.");
+                }
+            }
+
+            // Dealer's turn if player didn't bust
+            if (!player.getHand().isBust()) {
                 cli.showHands(player, dealer, true);
-            } else {
-                continueDrawing = false;
+                dealer.takeTurn(deck);
             }
-        }
-    }
 
-    private void handleDealerTurn() {
-        dealer.takeTurn(deck);
-    }
-
-    private void determineWinner() {
-        if (player.getHand().isBust()) {
-            cli.showResult("--- You busted! Dealer wins. ---");
-            player.loseBet();
-        } else if (dealer.getHand().isBust()) {
-            cli.showResult("--- Dealer busted! You win! ---");
-            player.winBet();
-        } else {
-            int playerTotal = player.getHand().getTotal();
-            int dealerTotal = dealer.getHand().getTotal();
-            if (playerTotal > dealerTotal) {
-                cli.showResult("--- You win! ---");
-                player.winBet();
-            } else if (playerTotal < dealerTotal) {
-                cli.showResult("--- Dealer wins! ---");
+            // Reveal and decide
+            cli.showHands(player, dealer, true);
+            String result;
+            if (player.getHand().isBust()) {
                 player.loseBet();
-            } else {
-                cli.showResult("Push (tie)!");
+                result = "You busted. You lose.";
+            } else if (dealer.getHand().isBust()) {
                 player.winBet();
+                result = "Dealer busted! You win!";
+            } else {
+                int pTotal = player.getHand().getTotal();
+                int dTotal = dealer.getHand().getTotal();
+                if (pTotal > dTotal) {
+                    player.winBet();
+                    result = "You win!";
+                } else if (pTotal < dTotal) {
+                    player.loseBet();
+                    result = "You lose.";
+                } else {
+                    // push: return bet
+                    player.placeBet(0); // no net change
+                    result = "Push (tie).";
+                }
             }
-        }
-    }
 
-    private void showFarewell() {
-        cli.showResult("Thanks for playing!");
-    }
+            cli.showResult(result);
+            cli.printBalance(player);
 
-    private void showProfitLoss(double startingBalance, double finalBalance) {
-        double profit = finalBalance - startingBalance;
-        if (profit > 0) {
-            cli.showResult(String.format("You made $%.2f profit!", profit));
-        } else if (profit < 0) {
-            cli.showResult(String.format("You lost $%.2f.", -profit));
-        } else {
-            cli.showResult("You broke even!");
-        }
+        } while (cli.askToContinue());
+
+        System.out.println("Thanks for playing. Goodbye!");
     }
 }

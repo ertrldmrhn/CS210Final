@@ -2,41 +2,26 @@ package BlackJack;
 
 import java.util.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class Deck {
-	private List<Card> cards;
-    private static final int SHUFFLE_THRESHOLD = 26; // half of 52
+    private final List<Card> cards = new ArrayList<>();
 
     public Deck() {
-        cards = new ArrayList<>();
-        initializeDeck();
-        shuffle();
-    }
-
-    private void initializeDeck() {
-        for (Suit suit : Suit.values()) {
-            for (Rank rank : Rank.values()) {
-                cards.add(new Card(suit, rank));
-            }
-        }
+        for (Suit s : Suit.values())
+            for (Rank r : Rank.values())
+                cards.add(new Card(s, r));
     }
 
     public void shuffle() {
         Collections.shuffle(cards);
-        System.out.println("\n-- Deck shuffled --");
     }
 
     public Card drawCard() {
-        if (cards.size() <= SHUFFLE_THRESHOLD) {
-            System.out.println("\n-- Low cards, reshuffling deck --");
-            cards.clear();
-            initializeDeck();
-            shuffle();
-        }
-
-        if (!cards.isEmpty()) {
-            return cards.remove(0);
-        }
-        return null; // Deck should never be empty because of auto reshuffle
+        if (isEmpty()) throw new IllegalStateException("Deck is empty");
+        return cards.remove(cards.size() - 1);
     }
 
     public boolean isEmpty() {
